@@ -52,7 +52,7 @@ class CustomerResource extends Resource
     public static function getRelations(): array
     {
         return [
-            PostAssestmentsRelationManager::class
+            // PostAssestmentsRelationManager::class
         ];
     }
     /**

@@ -16,6 +16,7 @@ class Listing extends Model
         'title',
         'description',
         'type',    // e.g., room, service, event
+        'category_id',    // e.g., room, service, event
         'duration', // service duration in minutes
         'price',   // optional
         'available_from', // optional JSON or boolean
@@ -34,6 +35,10 @@ class Listing extends Model
     public function bookings()
     {
         return $this->hasMany(Booking::class);
+    }
+
+    public function category(){
+        return $this->belongsTo(Category::class);
     }
 
     public function getAvailabilityAttribute(){
