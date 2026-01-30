@@ -32,7 +32,15 @@ class BedResource extends Resource
     protected static ?string $recordTitleAttribute = 'bed';
 
     protected static ?int $navigationSort = 3;
-    // protected static UnitEnum|string|null $navigationGroup = 'Booking Management';
+    protected static UnitEnum|string|null $navigationGroup = 'Booking Management';
+
+    /**
+     * Hide this resource if beds are not required
+     */
+    public static function shouldRegisterNavigation(): bool
+    {
+        return config('booking.requires_bed', false);
+    }
 
     public static function form(Schema $schema): Schema
     {
