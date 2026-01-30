@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>HBC Wellness - Beauty & Spa Center</title>
+    <title>{{config('app.name')}} - Beauty & Spa Center</title>
     
     <script src="https://cdn.tailwindcss.com"></script>
     
@@ -15,13 +15,30 @@
     @livewireStyles
     
     <style>
-        :root {
+        /* :root {
             --color-primary: #B8936D;
             --color-secondary: #8B7355;
             --color-dark: #2C2C2C;
             --color-light: #F8F6F3;
             --color-accent: #D4AF7A;
-        }
+        } */
+
+        :root {
+        /* Main brand (sage green) */
+        --color-primary: #7e8f7f;
+
+        /* Slightly darker for hover / emphasis */
+        --color-secondary: #6f806f;
+
+        /* Text, sidebar, strong contrast */
+        --color-dark: #2f3a2f;
+
+        /* Page background / cards */
+        --color-light: #f3f5f3;
+
+        /* Accent (soft gold-sage highlight) */
+        --color-accent: #a9b5a9;
+    }
 
         body {
             font-family: 'Montserrat', sans-serif;
@@ -183,27 +200,22 @@
             background: var(--color-primary);
         }
     </style>
-
-    <script>
-        tailwind.config = {
-            theme: {
-                extend: {
-                    colors: {
-                        primary: '#B8936D',
-                        secondary: '#8B7355',
-                        dark: '#2C2C2C',
-                        light: '#F8F6F3',
-                        accent: '#D4AF7A',
-                    },
-                    fontFamily: {
-                        serif: ['Cormorant Garamond', 'serif'],
-                        display: ['Lora', 'serif'],
-                        sans: ['Montserrat', 'sans-serif'],
-                    },
+ 
+<script>
+    tailwind.config = {
+        theme: {
+            extend: {
+                colors: {
+                    primary: '#7e8f7f',
+                    secondary: '#6f806f',
+                    dark: '#2f3a2f',
+                    light: '#f3f5f3',
+                    accent: '#a9b5a9',
                 }
             }
         }
-    </script>
+    }
+</script>
 </head>
 <body class="antialiased">
     @livewire('header')

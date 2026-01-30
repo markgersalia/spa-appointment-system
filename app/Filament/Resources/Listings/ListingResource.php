@@ -3,6 +3,8 @@
 namespace App\Filament\Resources\Listings;
 
 // use App\Filament\Clusters\Booking\BookingCluster;
+
+use App\Filament\Clusters\Services\ServicesCluster;
 use App\Filament\Resources\Listings\Pages\CreateListing;
 use App\Filament\Resources\Listings\Pages\EditListing;
 use App\Filament\Resources\Listings\Pages\ListListings;
@@ -37,18 +39,21 @@ class ListingResource extends Resource
     
 
     
-     protected static ?int $navigationSort = 2;
-    protected static UnitEnum|string|null $navigationGroup = 'Booking Management';
+    //  protected static ?int $navigationSort = 2;
+    // protected static UnitEnum|string|null $navigationGroup = 'Booking Management';
 
     public static function getNavigationBadge(): ?string
     {
         return (string) Listing::count();
     }
+        protected static ?string $cluster = ServicesCluster::class;
+
 
     public function getTitle(): string | Htmlable
     {
         return 'Services';
     }
+    
     // protected static UnitEnum|string|null $navigationGroup = 'Booking Management';
     public static function canAccess(): bool
 {

@@ -5,6 +5,7 @@ namespace App\Livewire;
 use Livewire\Component;
 use App\Models\Booking;
 use App\Models\Listing;
+use App\Models\Category;
 use App\Models\Therapist;
 use App\Models\Customer;
 use Carbon\Carbon;
@@ -17,9 +18,11 @@ class BookingForm extends Component
     public $totalSteps = 4;
 
     // Step 1: Service Selection
+    public $selectedCategory = '';
     public $selectedService = '';
     public $selectedListing = '';
     public $selectedBed = '';
+    public $categories = [];
     public $services = [];
     public $listings = [];
     public $beds = [];
@@ -40,6 +43,7 @@ class BookingForm extends Component
     public $booking = null;
 
     protected $rules = [
+        'selectedCategory' => 'required|exists:categories,id',
         'selectedListing' => 'required|exists:listings,id',
         'selectedDate' => 'required|date|after_or_equal:today',
         'selectedTime' => 'required',
@@ -63,6 +67,8 @@ class BookingForm extends Component
     }
 
     protected $messages = [
+        'selectedCategory.required' => 'Please select a category',
+        'selectedCategory.exists' => 'Selected category is not available',
         'selectedListing.required' => 'Please select a service',
         'selectedListing.exists' => 'Selected service is not available',
         'selectedDate.required' => 'Please select a date',
@@ -78,16 +84,15 @@ class BookingForm extends Component
 
     public function mount()
     {
-        // Load services (listings) from database
-        $this->listings = Listing::orderBy('title')
-            ->get(['id', 'title', 'duration', 'price', 'description', 'availability'])
-            ->map(function ($listing) {
+        // Load categories
+        $this->categories = Category::orderBy('name')
+            ->get(['id', 'name', 'description', 'slug'])
+            ->map(function ($category) {
                 return [
-                    'id' => $listing->id,
-                    'name' => $listing->title,
-                    'duration' => ($listing->duration ?? 60) . ' min',
-                    'price' => '₱' . number_format($listing->price, 2),
-                    'description' => $listing->description,
+                    'id' => $category->id,
+                    'name' => $category->name,
+                    'description' => $category->description,
+                    'slug' => $category->slug,
                 ];
             })
             ->toArray();
@@ -99,6 +104,40 @@ class BookingForm extends Component
                 ->pluck('name', 'id')
                 ->toArray();
         }
+    }
+
+    public function updatedSelectedCategory()
+    {
+        // Clear previously selected service when category changes
+        $this->selectedListing = '';
+        $this->selectedService = '';
+        
+        // Load services (listings) based on selected category
+        if ($this->selectedCategory) {
+            $this->listings = Listing::where('category_id', $this->selectedCategory)
+                ->orderBy('title')
+                ->get(['id', 'title', 'duration', 'price', 'description', 'availability'])
+                ->map(function ($listing) {
+                    return [
+                        'id' => $listing->id,
+                        'name' => $listing->title,
+                        'duration' => ($listing->duration ?? 60) . ' min',
+                        'price' => '₱' . number_format($listing->price, 2),
+                        'description' => $listing->description,
+                    ];
+                })
+                ->toArray();
+        } else {
+            $this->listings = [];
+        }
+    }
+
+    public function updatedSelectedListing()
+    {
+        // Clear time selection when service changes
+        $this->selectedDate = '';
+        $this->selectedTime = '';
+        $this->availableTimes = [];
     }
 
     public function updatedSelectedDate()
@@ -169,7 +208,10 @@ class BookingForm extends Component
     private function validateCurrentStep()
     {
         if ($this->currentStep == 1) {
-            $this->validate(['selectedListing' => 'required']);
+            $this->validate([
+                'selectedCategory' => 'required|exists:categories,id',
+                'selectedListing' => 'required|exists:listings,id',
+            ]);
         } elseif ($this->currentStep == 2) {
             $step2Rules = [
                 'selectedDate' => 'required|date|after_or_equal:today',
@@ -213,7 +255,7 @@ class BookingForm extends Component
 
     public function submitBooking()
     {
-        $this->validate();
+        $this->validate($this->getValidationRules());
 
         // Start database transaction
         try {

@@ -32,9 +32,11 @@ class AdminPanelProvider extends PanelProvider
     {
         return $panel
             ->default()
-            ->id('admin') 
+            ->id('admin')
             ->colors([
-                'primary' => Color::Amber,
+                'primary' => '#7e8f7f',
+                'secondary' => '#7e8f7f',
+                // 'gray' => '#2f3a2f',
             ])
             ->discoverResources(in: app_path('Filament/Resources'), for: 'App\Filament\Resources')
             ->discoverPages(in: app_path('Filament/Pages'), for: 'App\Filament\Pages')
@@ -56,11 +58,11 @@ class AdminPanelProvider extends PanelProvider
                 StartSession::class,
                 AuthenticateSession::class,
                 ShareErrorsFromSession::class,
-                VerifyCsrfToken::class, 
+                VerifyCsrfToken::class,
                 SubstituteBindings::class,
                 DisableBladeIconComponents::class,
                 DispatchServingFilamentEvent::class,
-            ]) 
+            ])
             // ->viteTheme('resources/css/filament/admin/theme.css')
             ->plugins([
                 FilamentShieldPlugin::make(), // ✅ register plugin
@@ -71,7 +73,7 @@ class AdminPanelProvider extends PanelProvider
             ])
             ->sidebarCollapsibleOnDesktop()
             ->subNavigationPosition(SubNavigationPosition::End)
-            ->unsavedChangesAlerts() 
+            ->unsavedChangesAlerts()
             // ->topbar(false)
             ->brandName(env('APP_NAME'))
             ->profile()
@@ -81,11 +83,12 @@ class AdminPanelProvider extends PanelProvider
             ->login()
             ->authGuard('web')
             // ->topNavigation(true)
-            
-            // ->brandLogo(asset('images/logo.jpg'))
-            // ->brandLogoHeight('50px')
-            // ->favicon(asset('images/logo.jpg'))  
 
-            ;
+            ->darkModeBrandLogo(asset('images/dark-logo.png'))
+            ->brandLogo(asset('images/logo.png'))
+            ->brandLogoHeight('40px')
+            ->favicon(asset('images/logo.png'))  
+
+        ;
     }
 }

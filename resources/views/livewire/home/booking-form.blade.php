@@ -22,7 +22,7 @@
                                 <!-- Step Label -->
                                 <span class="absolute -bottom-8 left-1/2 transform -translate-x-1/2 text-xs uppercase tracking-wider whitespace-nowrap
                                     {{ $currentStep >= $i ? 'text-primary font-medium' : 'text-gray-400' }}">
-                                    @if ($i == 1) Service
+                                    @if ($i == 1) Category & Service
                                     @elseif ($i == 2) Date & Time
                                     @elseif ($i == 3) Your Details
                                     @else Confirm
@@ -42,53 +42,108 @@
             <!-- Form Card -->
             <div class="bg-white shadow-2xl p-8 lg:p-12 mt-12">
                 
-                <!-- Step 1: Service Selection -->
+                <!-- Step 1: Category & Service Selection -->
                 @if ($currentStep === 1)
                     <div class="space-y-8">
                         <div class="text-center mb-8">
-                            <h2 class="text-3xl lg:text-4xl font-display font-light text-dark mb-3">Select Your Service</h2>
-                            <p class="text-gray-600">Choose the treatment that's perfect for you</p>
+                            <h2 class="text-3xl lg:text-4xl font-display font-light text-dark mb-3">Select Category & Service</h2>
+                            <p class="text-gray-600">Choose your treatment category and service</p>
                         </div>
                         
-                        <div class="grid md:grid-cols-2 gap-6">
-                            @foreach ($listings as $service)
-                                <label class="relative cursor-pointer group">
-                                    <input 
-                                        type="radio" 
-                                        wire:model.live="selectedListing" 
-                                        value="{{ $service['id'] }}" 
-                                        class="peer sr-only">
-                                     
-                                    <div class="p-6 border-2 transition-all duration-300 
-                                        peer-checked:border-primary peer-checked:bg-primary/5 hover:shadow-lg
-                                        {{ $errors->has('selectedListing') ? 'border-red-300' : 'border-gray-200' }}">
-                                         
-                                        <div class="flex items-start justify-between mb-3">
-                                            <h3 class="font-display text-xl text-dark group-hover:text-primary transition-colors">
-                                                {{ $service['name'] }}
-                                            </h3>
-                                            <span class="text-primary font-semibold text-lg">{{ $service['price'] }}</span>
+                        <!-- Category Selection -->
+                        <div class="mb-8">
+                            <label class="block text-sm font-medium text-gray-700 mb-4 uppercase tracking-wider">
+                                Step 1: Select Category
+                            </label>
+                            <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
+                                @foreach ($categories as $category)
+                                    <label class="relative cursor-pointer group" for="category_{{$category['id']}}">
+                                        <input 
+                                            id="category_{{$category['id']}}"
+                                            name="category_selection"
+                                            type="radio" 
+                                            wire:model.live="selectedCategory" 
+                                            value="{{ $category['id'] }}" 
+                                            class="peer sr-only d-none">
+                                        
+                                        <div class="p-6 border-2 transition-all duration-300 
+                                            peer-checked:border-primary peer-checked:bg-primary/5 hover:shadow-lg
+                                            {{ $errors->has('selectedCategory') ? 'border-red-300' : 'border-gray-200' }}">
+                                            
+                                            <div class="mb-3">
+                                                <h3 class="font-display text-xl text-dark group-hover:text-primary transition-colors">
+                                                    {{ $category['name'] }}
+                                                </h3>
+                                            </div>
+                                            
+                                            @if ($category['description'])
+                                                <p class="text-sm text-gray-500">{{ Str::limit($category['description'], 80) }}</p>
+                                            @endif
+                                            
+                                            
                                         </div>
-                                         
-                                        <p class="text-sm text-gray-600 mb-3">{{ $service['duration'] }}</p>
-                                        @if ($service['description'])
-                                            <p class="text-sm text-gray-500">{{ Str::limit($service['description'], 100) }}</p>
-                                        @endif
-                                         
-                                        <!-- Check Mark -->
-                                        <div class="absolute top-4 right-4 w-6 h-6 rounded-full border-2 transition-all duration-300
-                                            peer-checked:border-primary peer-checked:bg-primary border-gray-300 flex items-center justify-center">
-                                            <svg class="w-4 h-4 text-white opacity-0 peer-checked:opacity-100" fill="currentColor" viewBox="0 0 20 20">
-                                                <path d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"/>
-                                            </svg>
-                                        </div>
-                                    </div>
-                                </label>
-                            @endforeach
+                                    </label>
+                                @endforeach
+                            </div>
+                            @error('selectedCategory') 
+                                <p class="text-red-500 text-sm mt-2">{{ $message }}</p> 
+                            @enderror
                         </div>
-                        @error('selectedListing') 
-                            <p class="text-red-500 text-sm mt-2">{{ $message }}</p> 
-                        @enderror
+
+                        <!-- Service Selection (only shown when category is selected) -->
+                        @if ($selectedCategory)
+                            <div class="mt-8 pt-8 border-t border-gray-200">
+                                <label class="block text-sm font-medium text-gray-700 mb-4 uppercase tracking-wider">
+                                    Step 2: Select Service
+                                </label>
+                                
+                                @if (count($listings) > 0)
+                                    <div class="grid md:grid-cols-2 gap-6">
+                                        @foreach ($listings as $service)
+                                            <label class="relative cursor-pointer group" for="service_{{$service['id']}}">
+                                                <input 
+                                                    id="service_{{$service['id']}}"
+                                                    name="service_selection"
+                                                    type="radio" 
+                                                    wire:model.live="selectedListing" 
+                                                    value="{{ $service['id'] }}" 
+                                                    class="peer sr-only hidden">
+                                                
+                                                <div class="p-6 border-2 transition-all duration-300 
+                                                    peer-checked:border-primary peer-checked:bg-primary/5 hover:shadow-lg
+                                                    {{ $errors->has('selectedListing') ? 'border-red-300' : 'border-gray-200' }}">
+                                                    
+                                                    <div class="flex items-start justify-between mb-3">
+                                                        <h3 class="font-display text-xl text-dark group-hover:text-primary transition-colors">
+                                                            {{ $service['name'] }}
+                                                        </h3>
+                                                        <span class="text-primary font-semibold text-lg">{{ $service['price'] }}</span>
+                                                    </div>
+                                                    
+                                                    <p class="text-sm text-gray-600 mb-3">{{ $service['duration'] }}</p>
+                                                    @if ($service['description'])
+                                                        <p class="text-sm text-gray-500">{!! Str::limit($service['description'], 100) !!}</p>
+                                                    @endif
+                                                    
+                                                    
+                                                </div>
+                                            </label>
+                                        @endforeach
+                                    </div>
+                                    @error('selectedListing') 
+                                        <p class="text-red-500 text-sm mt-2">{{ $message }}</p> 
+                                    @enderror
+                                @else
+                                    <div class="bg-yellow-50 border-2 border-yellow-200 rounded-lg p-6 text-center">
+                                        <svg class="w-12 h-12 text-yellow-500 mx-auto mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path>
+                                        </svg>
+                                        <p class="text-yellow-800 font-medium">No services available in this category</p>
+                                        <p class="text-yellow-600 text-sm mt-1">Please select a different category.</p>
+                                    </div>
+                                @endif
+                            </div>
+                        @endif
                     </div>
                 @endif
 
@@ -137,9 +192,12 @@
                                     Select Time
                                 </label>
                                 <div class="grid grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3">
-                                    @foreach ($availableTimes as $time)
-                                        <label class="cursor-pointer">
+                                    @foreach ($availableTimes as $key => $time)
+                                        <label class="cursor-pointer" 
+                                                for="time_slot_{{$key}}">
                                             <input 
+                                                id="time_slot_{{$key}}"
+                                                name="time_slot"
                                                 type="radio" 
                                                 wire:model.live="selectedTime" 
                                                 value="{{ $time }}" 
