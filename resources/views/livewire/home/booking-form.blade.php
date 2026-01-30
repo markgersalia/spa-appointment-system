@@ -51,27 +51,30 @@
                         </div>
                         
                         <div class="grid md:grid-cols-2 gap-6">
-                            @foreach ($services as $service)
+                            @foreach ($listings as $service)
                                 <label class="relative cursor-pointer group">
                                     <input 
                                         type="radio" 
-                                        wire:model.live="selectedService" 
+                                        wire:model.live="selectedListing" 
                                         value="{{ $service['id'] }}" 
                                         class="peer sr-only">
-                                    
+                                     
                                     <div class="p-6 border-2 transition-all duration-300 
                                         peer-checked:border-primary peer-checked:bg-primary/5 hover:shadow-lg
-                                        {{ $errors->has('selectedService') ? 'border-red-300' : 'border-gray-200' }}">
-                                        
+                                        {{ $errors->has('selectedListing') ? 'border-red-300' : 'border-gray-200' }}">
+                                         
                                         <div class="flex items-start justify-between mb-3">
                                             <h3 class="font-display text-xl text-dark group-hover:text-primary transition-colors">
                                                 {{ $service['name'] }}
                                             </h3>
                                             <span class="text-primary font-semibold text-lg">{{ $service['price'] }}</span>
                                         </div>
-                                        
+                                         
                                         <p class="text-sm text-gray-600 mb-3">{{ $service['duration'] }}</p>
-                                        
+                                        @if ($service['description'])
+                                            <p class="text-sm text-gray-500">{{ Str::limit($service['description'], 100) }}</p>
+                                        @endif
+                                         
                                         <!-- Check Mark -->
                                         <div class="absolute top-4 right-4 w-6 h-6 rounded-full border-2 transition-all duration-300
                                             peer-checked:border-primary peer-checked:bg-primary border-gray-300 flex items-center justify-center">
@@ -83,7 +86,7 @@
                                 </label>
                             @endforeach
                         </div>
-                        @error('selectedService') 
+                        @error('selectedListing') 
                             <p class="text-red-500 text-sm mt-2">{{ $message }}</p> 
                         @enderror
                     </div>
@@ -112,6 +115,21 @@
                             @enderror
                         </div>
 
+                        <!-- Date Availability Message -->
+                        @if ($selectedDate)
+                            <div class="bg-red-50 border-2 border-red-200 rounded-lg p-4 mb-6">
+                                <div class="flex items-center">
+                                    <svg class="w-5 h-5 text-red-500 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                                    </svg>
+                                    <div>
+                                        <p class="text-red-700 font-medium">This date is not available</p>
+                                        <p class="text-red-600 text-sm mt-1">Please select another date for your selected service.</p>
+                                    </div>
+                                </div>
+                            </div>
+                        @endif
+
                         <!-- Time Slots -->
                         @if ($selectedDate && count($availableTimes) > 0)
                             <div>
@@ -135,6 +153,48 @@
                                     @endforeach
                                 </div>
                                 @error('selectedTime') 
+                                    <p class="text-red-500 text-sm mt-2">{{ $message }}</p> 
+                                @enderror
+                            </div>
+                        @endif
+
+                        @if ($selectedDate && count($availableTimes) === 0)
+                            <div class="bg-yellow-50 border-2 border-yellow-200 rounded-lg p-4">
+                                <div class="flex items-center">
+                                    <svg class="w-5 h-5 text-yellow-600 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.732-.833-2.5 0L4.314 16.5c-.77.833.192 2.5 1.732 2.5z"></path>
+                                    </svg>
+                                    <div>
+                                        <p class="text-yellow-700 font-medium">No time slots available</p>
+                                        <p class="text-yellow-600 text-sm mt-1">All time slots for this date are fully booked.</p>
+                                    </div>
+                                </div>
+                            </div>
+                        @endif
+
+                        <!-- Bed Selection (Conditional) -->
+                        @if (config('booking.requires_bed') && $selectedDate && count($availableTimes) > 0)
+                            <div class="mt-8">
+                                <label class="block text-sm font-medium text-gray-700 mb-4 uppercase tracking-wider">
+                                    Select Bed
+                                </label>
+                                <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
+                                    @foreach ($beds as $bedId => $bedName)
+                                        <label class="cursor-pointer">
+                                            <input 
+                                                type="radio" 
+                                                wire:model.live="selectedBed" 
+                                                value="{{ $bedId }}" 
+                                                class="peer sr-only">
+                                            <div class="p-4 text-center border-2 transition-all duration-300
+                                                peer-checked:border-primary peer-checked:bg-primary peer-checked:text-white 
+                                                hover:border-primary/50 border-gray-200">
+                                                <span class="font-medium">{{ $bedName }}</span>
+                                            </div>
+                                        </label>
+                                    @endforeach
+                                </div>
+                                @error('selectedBed') 
                                     <p class="text-red-500 text-sm mt-2">{{ $message }}</p> 
                                 @enderror
                             </div>
@@ -217,12 +277,12 @@
                         </div>
                         
                         <div class="bg-light p-8 space-y-4">
-                            <div class="flex justify-between items-center pb-4 border-b border-gray-300">
-                                <span class="text-gray-600 uppercase tracking-wider text-sm">Service</span>
-                                <span class="font-display text-lg text-dark">
-                                    {{ collect($services)->firstWhere('id', $selectedService)['name'] ?? 'N/A' }}
-                                </span>
-                            </div>
+                             <div class="flex justify-between items-center pb-4 border-b border-gray-300">
+                                 <span class="text-gray-600 uppercase tracking-wider text-sm">Service</span>
+                                 <span class="font-display text-lg text-dark">
+                                     {{ collect($listings)->firstWhere('id', $selectedListing)['name'] ?? 'N/A' }}
+                                 </span>
+                             </div>
                             <div class="flex justify-between items-center pb-4 border-b border-gray-300">
                                 <span class="text-gray-600 uppercase tracking-wider text-sm">Date</span>
                                 <span class="font-display text-lg text-dark">{{ \Carbon\Carbon::parse($selectedDate)->format('F d, Y') }}</span>
@@ -290,10 +350,10 @@
                 <div class="bg-light p-8 mb-10 text-left max-w-md mx-auto">
                     <h3 class="font-display text-xl text-dark mb-6 text-center">Appointment Details</h3>
                     <div class="space-y-3 text-gray-700">
-                        <div class="flex justify-between">
-                            <span class="font-medium">Service:</span>
-                            <span>{{ collect($services)->firstWhere('id', $selectedService)['name'] }}</span>
-                        </div>
+                         <div class="flex justify-between">
+                             <span class="font-medium">Service:</span>
+                             <span>{{ collect($listings)->firstWhere('id', $selectedListing)['name'] }}</span>
+                         </div>
                         <div class="flex justify-between">
                             <span class="font-medium">Date:</span>
                             <span>{{ \Carbon\Carbon::parse($selectedDate)->format('F d, Y') }}</span>

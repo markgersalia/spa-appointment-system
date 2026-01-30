@@ -6,11 +6,11 @@ use App\Livewire\ReservationForm;
 use Illuminate\Support\Facades\Route;
 
 
-Route::get('/test-home', function () {
+Route::get('/', function () {
     return view('home');
 });
 
-Route::redirect('/', '/admin');
+// Route::redirect('/', '/admin');
 
  
 Route::get('/book', ReservationForm::class)->name('book');

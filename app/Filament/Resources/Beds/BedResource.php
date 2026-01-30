@@ -2,7 +2,7 @@
 
 namespace App\Filament\Resources\Beds;
 
-use App\Filament\Clusters\Booking\BookingCluster;
+// use App\Filament\Clusters\Booking\BookingCluster;
 use App\Filament\Resources\Beds\Pages\ManageBeds;
 use App\Models\Bed;
 use BackedEnum;
@@ -30,7 +30,7 @@ class BedResource extends Resource
     protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedRectangleStack;
 
     protected static ?string $recordTitleAttribute = 'bed';
-    protected static ?string $cluster = BookingCluster::class;
+
     protected static ?int $navigationSort = 3;
     // protected static UnitEnum|string|null $navigationGroup = 'Booking Management';
 

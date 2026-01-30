@@ -14,7 +14,7 @@ class InvoiceGenerateService{
         $customer = self::generateCustomerData($data->customer);
         // Add items from invoice_items field
  
-        $items = $data->items; 
+        $item = $data->items; 
         // dd($item);
         // $invoiceItem = InvoiceItem::make($item['name'])->pricePerUnit($item['price_per_unit']);
 
@@ -29,13 +29,13 @@ class InvoiceGenerateService{
             ->filename("invoices/" . $data->invoice_number)
             ->currencyCode('PHP');
 
-            if ($items) {
-            foreach ($items as $item) {
+            if ($item) {
+            // foreach ($items as $item) {
                 $invoiceItem = InvoiceItem::make($item['name'])
                     ->pricePerUnit($item['price_per_unit'])
                     ->quantity($item['quantity'] ?? 1);
                 $invoice->addItem($invoiceItem);
-            }
+            // }
         }
  
         $disk = "public"; // Ensure 'public' disk is configured in config/filesystems.php

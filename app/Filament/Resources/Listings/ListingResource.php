@@ -2,7 +2,7 @@
 
 namespace App\Filament\Resources\Listings;
 
-use App\Filament\Clusters\Booking\BookingCluster;
+// use App\Filament\Clusters\Booking\BookingCluster;
 use App\Filament\Resources\Listings\Pages\CreateListing;
 use App\Filament\Resources\Listings\Pages\EditListing;
 use App\Filament\Resources\Listings\Pages\ListListings;
@@ -25,10 +25,20 @@ class ListingResource extends Resource
     protected static ?string $model = Listing::class;
 
     protected static string|BackedEnum|null $navigationIcon = Heroicon::ListBullet;
+
     
-    protected static ?string $cluster = BookingCluster::class;
+    // 🔥 Navigation
+    protected static ?string $navigationLabel = 'Services';
+
+    // 🔥 All resource labels
+    protected static ?string $modelLabel = 'Service';
+    protected static ?string $pluralModelLabel = 'Services';
+
+    
+
     
      protected static ?int $navigationSort = 2;
+    protected static UnitEnum|string|null $navigationGroup = 'Booking Management';
 
     public static function getNavigationBadge(): ?string
     {

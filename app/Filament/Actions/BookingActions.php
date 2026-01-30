@@ -28,7 +28,7 @@ class BookingActions
             ->label('Confirm Booking')
             ->color('primary')
             ->visible(fn(Booking $record) => $record->canConfirm())
-            ->action(function (Booking $record) { 
+            ->action(function (Booking $record) {
                 $record->update(['status' => 'confirmed']);
             })
             ->after(function ($livewire) {
@@ -42,7 +42,7 @@ class BookingActions
             ->requiresConfirmation();
     }
 
-    public static function complete($ref = 'calendar'): Action
+    public static function completeAndFollowup($ref = 'calendar')
     {
         return Action::make('completeBooking')
             ->visible(function ($record) {
@@ -64,35 +64,40 @@ class BookingActions
                 $data['customer_id'] = $record->customer_id;
 
                 $record->update(['status' => 'completed']);
-                CustomerPostAssesment::create($data);
-                Notification::make()
-                    ->title('Booking successfully completed')
-                    ->success()
-                    ->send();
-                // do whatever (save assessment, update booking, etc.)
-                // Send data to the next modal
-                if ($data['require_followup']) {
 
-                    if ($ref == 'form') {
-                         BookingResource::getUrl('create', 
-                         [
-                                'customer_id' => $record->customer_id,
-                                'listing_id' => $record->listing_id,
-                                'therapist_id' => $record->therapist_id,
-                                'price' => $record->price,
-                                'selected_date' => $data['next_session_date']
-                            ]
-                        );
-                        
+                if (config('booking.requires_follow_up')) {
+
+
+                    CustomerPostAssesment::create($data);
+                    Notification::make()
+                        ->title('Booking successfully completed')
+                        ->success()
+                        ->send();
+                    // do whatever (save assessment, update booking, etc.)
+                    // Send data to the next modal
+                    if ($data['require_followup']) {
+
+                        if ($ref == 'form') {
+                            BookingResource::getUrl(
+                                'create',
+                                [
+                                    'customer_id' => $record->customer_id,
+                                    'listing_id' => $record->listing_id,
+                                    'therapist_id' => $record->therapist_id,
+                                    'price' => $record->price,
+                                    'selected_date' => $data['next_session_date']
+                                ]
+                            );
+                        }
+
+                        $livewire->replaceMountedAction('createFollowupBookingAction', [
+                            'customer_id' => $record->customer_id,
+                            'listing_id' => $record->listing_id,
+                            'therapist_id' => $record->therapist_id,
+                            'price' => $record->price,
+                            'selected_date' => $data['next_session_date']
+                        ]);
                     }
-
-                    $livewire->replaceMountedAction('createFollowupBookingAction', [
-                        'customer_id' => $record->customer_id,
-                        'listing_id' => $record->listing_id,
-                        'therapist_id' => $record->therapist_id,
-                        'price' => $record->price,
-                        'selected_date' => $data['next_session_date']
-                    ]);
                 }
             })
             ->icon(Heroicon::Check)
@@ -107,37 +112,48 @@ class BookingActions
             })
             ->steps(BookingForm::postAssessmentWizard());
     }
-    // public static function complete(): Action
-    // {
-    //     return Action::make('completeBooking')
-    //         ->label('Complete Booking')
-    //         ->color('success')
-    //         ->icon(Heroicon::Check)
-    //         ->visible(function($record){
-    //             return $record->canComplete(); 
-    //         })
-    //         // ->visible(fn(Booking $record) => $record->canComplete())
-    //         ->action(function (Booking $record,$livewire) {
-    //             if (! $record->canComplete()) {
-    //                 // Show notification and stop execution
-    //                 Notification::make()
-    //                     ->title('Cannot complete booking')
-    //                     ->body('Either payment is not yet complete or conditions are not met.')
-    //                     ->danger()
-    //                     ->send();
 
-    //                 return; // stop the action
-    //             }
-    //             $record->update(['status' => 'completed']);
+    public static function completeAndNoFollowUp()
+    {
+        return Action::make('completeBooking')
+            ->label('Complete Booking')
+            ->color('success')
+            ->icon(Heroicon::Check)
+            ->visible(function ($record) {
+                return $record->canComplete();
+            })
+            // ->visible(fn(Booking $record) => $record->canComplete())
+            ->action(function (Booking $record, $livewire) {
+                if (! $record->canComplete()) {
+                    // Show notification and stop execution
+                    Notification::make()
+                        ->title('Cannot complete booking')
+                        ->body('Either payment is not yet complete or conditions are not met.')
+                        ->danger()
+                        ->send();
 
+                    return; // stop the action
+                }
+                $record->update(['status' => 'completed']);
+                Notification::make()
+                    ->title('Booking successfully completed')
+                    ->success()
+                    ->send();
+            })
+            ->after(function ($livewire) {
+                $livewire->refreshRecords();
+            })
 
-    //         })
-    //         ->after(function ($livewire) {
-    //             $livewire->refreshRecords();
-    //         })
+            ->requiresConfirmation();
+    }
 
-    //         ->requiresConfirmation();
-    // }
+    public static function complete(): Action
+    {
+        if (config('booking.requires_follow_up')) {
+            return self::completeAndNoFollowUp();
+        }
+        return self::completeAndNoFollowUp();
+    }
 
 
     public static function cancel(): Action
@@ -169,7 +185,7 @@ class BookingActions
             // ->modalDescription('Make a payment for this booking')
             ->label('Make Payment')
             ->color('gray')
-            ->schema(fn($record)=>BookingPaymentsBookingPaymentResource::schema($record->balance())) // Reusing your schema
+            ->schema(fn($record) => BookingPaymentsBookingPaymentResource::schema($record->balance())) // Reusing your schema
             ->visible(fn(Booking $record) => $record->canAddPayment())
             ->action(function (Booking $record, array $data) {
                 $data['payment_status'] = 'paid';
@@ -179,19 +195,19 @@ class BookingActions
                     ? 'partially_paid'
                     : 'paid';
 
-                    
+
 
                 $record->update([
                     'payment_status' => $payment_status,
-                    'status'=>BookingStatus::Confirmed->value
+                    'status' => BookingStatus::Confirmed->value
                 ]);
 
-                
-                 Notification::make()
-                        ->title('Payment Successful')
-                        ->body('Payment was successful applied')
-                        ->success()
-                        ->send();
+
+                Notification::make()
+                    ->title('Payment Successful')
+                    ->body('Payment was successful applied')
+                    ->success()
+                    ->send();
             })
             ->after(function ($livewire) {
 

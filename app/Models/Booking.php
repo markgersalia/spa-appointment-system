@@ -35,9 +35,8 @@ class Booking extends Model implements Eventable
         'type',
         'location',
         'payment_status',
-        'bed_id'
+        'bed_id'      // optional: bed assignment
     ];
-
 
     protected function getStatusColor(): string
     {
@@ -48,13 +47,6 @@ class Booking extends Model implements Eventable
             'completed' => '#4ade80', // green
             default     => '#9ca3af', // gray
         };
-        //    return match ($this->status) {
-        //     'pending'   => '#fbbf24', // amber
-        //     'confirmed' => '#d97706', // blue
-        //     'canceled'  => '#92400e', // red
-        //     'completed' => '#f59e0b', // green
-        //     default     => '#9ca3af', // gray
-        // };
     }
 
     public $statuses = ['pending', 'confirmed', 'canceled', 'completed'];
@@ -63,7 +55,6 @@ class Booking extends Model implements Eventable
     {
         return $this->belongsTo(User::class);
     }
-
 
     public function customer()
     {
@@ -74,11 +65,11 @@ class Booking extends Model implements Eventable
     {
         return $this->belongsTo(Therapist::class);
     }
+
     public function bed()
     {
         return $this->belongsTo(Bed::class);
     }
-
 
     public function listing()
     {
@@ -98,7 +89,6 @@ class Booking extends Model implements Eventable
     public function scopeNotYetReminded($q){
         $q->whereNull('reminded_at');
     }
-
 
     public function totalPayment()
     {
@@ -134,35 +124,36 @@ class Booking extends Model implements Eventable
             ->extendedProp('customer_name', $this->customer->name)
             ->backgroundColor($this->getStatusColor())
             // ->backgroundColor('#FE9A00')
-        ;
+            ;
     }
-
 
     /**
      * The "booted" method of the model.
      */
     protected static function boot(): void
     {
-        
-
         parent::boot();
 
-        // Before creating a new Customer
+        // Before creating a new Booking
         static::creating(function ($booking) {
             // Generate a unique code
-            $booking->user_id = auth()->user()->id;
+            $booking->user_id = auth()->user()->id ?? null;
             
             if($booking->customer->is_vip){
                 $booking->status = 'confirmed';
+            }
+
+            // Make bed_id optional based on config
+            if (!config('booking.requires_bed')) {
+                $booking->bed_id = null;
             }
         });
 
         static::updated(function ($booking) {
             $appName = config('app.name');
             $booking->load('listing', 'therapist','invoice');
-            // Check if the 'status' field was changed
+            // Check if 'status' field was changed
             if ($booking->isDirty('status')) {
-                 
                 $oldStatus = $booking->getOriginal('status');
                 $newStatus = $booking->status;
                 $statusMap = [
@@ -180,56 +171,48 @@ class Booking extends Model implements Eventable
                     ],
                 ];
 
-                if (isset($statusMap[$booking?->status])) {
+                if (isset($statusMap[$booking->status])) {
                     $template = $statusMap[$booking->status]['template'];
                     $subject  = sprintf($statusMap[$booking->status]['subject'], $booking->booking_number);
-
                     Mail::to($booking->customer->email)->queue(new BookingMailNotification($subject, $template, $booking->toArray()));
                 }
-
             }
         });
-
-        
 
         static::created(function ($booking) { 
             $subject = "[".config('app.name') . "] Booking Created – Pending Confirmation #{$booking->booking_number}";
             $template = 'mails.bookings.created';
             $booking->load('listing', 'therapist','customer');
 
-
-
             if(!$booking->status){
                 $booking->status = 'pending';
             }
             Mail::to($booking->customer->email)->queue(new BookingMailNotification($subject, $template, $booking->toArray()));
+            $item = [
+                'name'=>$booking->listing->title,
+                'price_per_unit'=>$booking->price,
+                'quantity'=>1,
+                'total'=>1 * $booking->price,
+            ];
+            $invoice = $booking->invoice()->create([
+                'invoice_number' => Invoice::generateInvoiceNumber(),
+                'customer_id'=>$booking->customer->id,
+                'status'=>'pending',
+                'amount'=>$booking->price,
+                'items' => $item,
+                'invoice_date'=>now(),
+            ]);
 
-                    $item = [[
-                            'name'=>$booking->listing->title,
-                            'price_per_unit'=>$booking->price,
-                            'quantity'=>1,
-                            'total'=>1 * $booking->price,
-                    ]];
-                    $invoice = $booking->invoice()->create([
-                        'invoice_number' => Invoice::generateInvoiceNumber(),
-                        'customer_id'=>$booking->customer->id,
-                        'status'=>'pending',
-                        'amount'=>$booking->price,
-                        'items' => $item,
-                        'invoice_date'=>now(),
-                    ]);
-
-                    $invoice->file_path = (new InvoiceGenerateService)->generateInvoice($invoice);
-                    $invoice->save();
-
+            $invoice->file_path = (new InvoiceGenerateService)->generateInvoice($invoice);
+            $invoice->save();
         });
+        
         // Before saving (both creating and updating)
         static::saving(function ($booking) {
-            // Example: ensure name is title-cased
+            // Example: ensure user is set for authenticated users
             if(auth()->user()){
                 $booking->user_id = auth()->user()->id;
             }
-
         });
     }
 
@@ -237,21 +220,20 @@ class Booking extends Model implements Eventable
     {
         $slots = TimeslotService::generateForDay($date);
         $bookings = self::whereDate('start_time', $date)->get();
-
         $available = [];
 
         foreach ($slots as $slot) {
             $overlap = false;
 
-            // foreach ($bookings as $booking) {
-            //     $bStart = Carbon::parse($booking->start_time);
-            //     $bEnd   = Carbon::parse($booking->end_time);
+            foreach ($bookings as $booking) {
+                $bStart = Carbon::parse($booking->start_time);
+                $bEnd   = Carbon::parse($booking->end_time);
 
-            //     if ($slot['start'] < $bEnd && $slot['end'] > $bStart) {
-            //         $overlap = true;
-            //         break;
-            //     }
-            // }
+                if ($slot['start'] < $bEnd && $slot['end'] > $bStart) {
+                    $overlap = true;
+                    break;
+                }
+            }
 
             if (!$overlap) {
                 $label = $slot['label'];
@@ -261,7 +243,6 @@ class Booking extends Model implements Eventable
 
         return $available;
     }
-    
 
     public function canAddPayment(){
         $status = $this->status;
@@ -278,49 +259,9 @@ class Booking extends Model implements Eventable
         return ($status == 'confirmed' && $this->payment_status == 'paid') ;
     }
 
-
-
-    // public static function availableTimeslots($date)
-    // {
-    //     $slots = TimeslotService::generateForDay($date); // returns ['start' => Carbon, 'end' => Carbon, 'label' => '...']
-    //     $bookings = self::whereDate('start_time', $date)->get();
-
-    //     $timeslots = [];
-
-    //     foreach ($slots as $slot) {
-    //         $slotStart = Carbon::parse($slot['start']);
-    //         $slotEnd = Carbon::parse($slot['end']);
-
-    //         $overlap = false;
-
-    //         foreach ($bookings as $booking) {
-    //             $bStart = Carbon::parse($booking->start_time);
-    //             $bEnd = Carbon::parse($booking->end_time);
-
-    //             if ($slotStart < $bEnd && $slotEnd > $bStart) {
-    //                 $overlap = true;
-    //                 break;
-    //             }
-    //         }
-
-    //         // Convert to 12-hour format for display
-    //         $label = $slotStart->format('g:i A') . ' - ' . $slotEnd->format('g:i A');
-
-    //         $timeslots[$label] = [
-    //             'label' => $label,
-    //             'disabled' => $overlap, // mark overlap slots as disabled
-    //         ];
-    //     }
-
-    //     return $timeslots;
-    // }
-
     public static function clearBookingData(){
         DB::table('bookings')->delete();
         DB::table('booking_payments')->delete();
         DB::table('invoices')->delete();
     }
-
-
-
 }
