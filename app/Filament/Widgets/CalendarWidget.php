@@ -89,17 +89,16 @@ class CalendarWidget extends FilamentCalendarWidget
                 ->action(fn() => $this->setView(CalendarViewType::DayGridMonth))
                 ->color(
                     fn() =>
-                    $this->calendarView->value == CalendarViewType::DayGridMonth->value
+                    $this->calendarView->value === CalendarViewType::DayGridMonth->value
                         ? 'primary'
                         : 'gray'
                 ),
             Action::make('day')
                 ->label('Day')
                 ->action(fn() => $this->setView(CalendarViewType::ListDay))
-
                 ->color(
                     fn() =>
-                    $this->calendarView->value == CalendarViewType::ListDay->value
+                    $this->calendarView->value === CalendarViewType::ListDay->value
                         ? 'primary'
                         : 'gray'
                 ),
