@@ -26,11 +26,13 @@ class BookingForm extends Component
     public $services = [];
     public $listings = [];
     public $beds = [];
+    
 
     // Step 2: Date & Time
     public $selectedDate = '';
     public $selectedTime = '';
     public $availableTimes = [];
+    public $dateAvailableMessage = '';
 
     // Step 3: Personal Information
     public $name = '';
@@ -41,6 +43,7 @@ class BookingForm extends Component
     // Step 4: Confirmation
     public $bookingConfirmed = false;
     public $booking = null;
+    public $isSubmitting = false;
 
     protected $rules = [
         'selectedCategory' => 'required|exists:categories,id',
@@ -142,11 +145,13 @@ class BookingForm extends Component
 
     public function updatedSelectedDate()
     {
+        $this->isDateAvailable($this->selectedDate);
         // Clear previously selected time when date changes
         $this->selectedTime = '';
         
         // Generate available time slots based on selected date and service
         $this->availableTimes = $this->generateAvailableTimeSlots();
+ 
     }
 
     private function generateAvailableTimeSlots()
@@ -170,16 +175,39 @@ class BookingForm extends Component
     public function isDateAvailable($date)
     {
         if (!$date || !$this->selectedListing) {
+            $this->dateAvailableMessage = 'Please select a service first';
             return false;
         }
 
         $listing = Listing::find($this->selectedListing);
         if (!$listing) {
+            $this->dateAvailableMessage = 'Selected service is not available';
             return false;
         }
 
-        // Check if listing is available for the date
-        return $listing->isAvailable($date);
+        // Check listing availability first
+        if (!$listing->isAvailable($date)) {
+            $this->dateAvailableMessage = 'This service is not available on the selected date';
+            return false;
+        }
+
+        // Check if any available therapist exists for the date
+        $therapists = \App\Models\Therapist::where('is_active', 1)->get();
+        
+        foreach ($therapists as $therapist) {
+            // Check if therapist is on leave for the entire day
+            $isOnLeave = $therapist->isOnLeave($date . ' 00:00:00', $date . ' 23:59:59');
+            
+            if (!$isOnLeave) {
+                // Therapist is available on this date
+                $this->dateAvailableMessage = '';
+                return true;
+            }
+        }  
+
+        // No therapist available for this date
+        $this->dateAvailableMessage = 'No therapists are available on this date';
+        return false;
     }
 
     public function nextStep()
@@ -255,6 +283,8 @@ class BookingForm extends Component
 
     public function submitBooking()
     {
+        $this->isSubmitting = true;
+        
         $this->validate($this->getValidationRules());
 
         // Start database transaction
@@ -275,6 +305,8 @@ class BookingForm extends Component
             
             // Parse time slot to get start and end times
             [$startTime, $endTime] = explode(' - ', $this->selectedTime);
+
+
             
             // Create booking in database
             $bookingData = [
@@ -307,6 +339,7 @@ class BookingForm extends Component
             // Mail::to($this->email)->send(new BookingConfirmation($this->booking));
 
         } catch (\Exception $e) {
+            $this->isSubmitting = false;
             DB::rollBack();
             session()->flash('error', 'There was an error creating your booking. Please try again.');
             throw $e;

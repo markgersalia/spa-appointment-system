@@ -1,5 +1,5 @@
 <div>
-    <div class="max-w-5xl mx-auto">
+    <div class="max-w-7xl mx-auto">
         
         @if (!$bookingConfirmed)
             <!-- Progress Steps -->
@@ -171,14 +171,14 @@
                         </div>
 
                         <!-- Date Availability Message -->
-                        @if ($selectedDate)
+                        @if ($selectedDate && $dateAvailableMessage)
                             <div class="bg-red-50 border-2 border-red-200 rounded-lg p-4 mb-6">
                                 <div class="flex items-center">
                                     <svg class="w-5 h-5 text-red-500 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
                                     </svg>
                                     <div>
-                                        <p class="text-red-700 font-medium">This date is not available</p>
+                                        <p class="text-red-700 font-medium">{{$dateAvailableMessage}}</p>
                                         <p class="text-red-600 text-sm mt-1">Please select another date for your selected service.</p>
                                     </div>
                                 </div>
@@ -365,8 +365,20 @@
 
                         <button 
                             wire:click="submitBooking" 
-                            class="w-full bg-primary text-white py-5 px-8 text-sm tracking-widest uppercase font-medium hover:bg-secondary transition-all duration-300 transform hover:scale-[1.02] shadow-lg">
-                            Confirm Booking
+                            wire:loading.attr="disabled"
+                            class="w-full bg-primary text-white py-5 px-8 text-sm tracking-widest uppercase font-medium hover:bg-secondary transition-all duration-300 transform hover:scale-[1.02] shadow-lg disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none">
+                            
+                            <span wire:loading.remove wire:target="submitBooking">
+                                Confirm Booking
+                            </span>
+                            
+                            <span wire:loading wire:target="submitBooking" class="flex items-center justify-center">
+                                <svg class="animate-spin h-5 w-5 mr-3" viewBox="0 0 24 24">
+                                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" fill="none"></circle>
+                                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                                </svg>
+                                Processing...
+                            </span>
                         </button>
                     </div>
                 @endif
