@@ -87,7 +87,7 @@ class AdminPanelProvider extends PanelProvider
             ->darkModeBrandLogo(asset('images/dark-logo.png'))
             ->brandLogo(asset('images/logo.png'))
             ->brandLogoHeight('40px')
-            ->favicon(asset('images/logo.png'))  
+            ->favicon(asset('images/favicon.ico'))  
 
         ;
     }
