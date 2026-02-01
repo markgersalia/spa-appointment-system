@@ -73,6 +73,11 @@ class Therapist extends Model
     public function isAvailable($date, $startTime, $endTime, $excludeBookingId = null)
     {
 
+        if($this->isOnLeave($startTime, $endTime)){
+            return false;
+        }
+
+
         $start = Carbon::parse($startTime);
         $end   = Carbon::parse($endTime);
 
