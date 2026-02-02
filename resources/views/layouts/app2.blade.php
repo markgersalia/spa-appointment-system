@@ -396,6 +396,23 @@
         header .toggle-slider {
             background-color: var(--color-primary) !important;
         }
+
+        /* Mobile layout fixes for dark theme */
+        @media (max-width: 640px) {
+            .container {
+                padding-left: 1rem !important;
+                padding-right: 1rem !important;
+            }
+            
+            header .container {
+                padding-left: 1rem !important;
+                padding-right: 1rem !important;
+            }
+            
+            .flex {
+                max-width: 100%;
+            }
+        }
     </style>
  
 <script>
