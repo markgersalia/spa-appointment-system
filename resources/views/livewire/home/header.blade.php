@@ -57,6 +57,36 @@
                 </a>
             </nav>
 
+            <!-- Theme Toggle Switch -->
+            <div class="hidden lg:flex items-center space-x-3">
+                <div class="relative">
+                    <label class="flex items-center cursor-pointer group">
+                        <!-- Light Theme Icon -->
+                        <svg class="w-5 h-5 text-white transition-all duration-300" 
+                             :class="scrolled ? 'text-dark' : 'text-white'"
+                             fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"/>
+                        </svg>
+                        
+                        <!-- Toggle Switch -->
+                        <div class="relative ml-3 w-14 h-8 bg-gray-200 rounded-full transition-colors duration-300"
+                             :class="scrolled ? 'bg-gray-200' : 'bg-white/20'"
+                             onclick="window.location.href = window.location.pathname === '/' ? '/home2' : '/'">
+                            <div class="absolute top-1 left-1 w-6 h-6 bg-white rounded-full shadow-md transform transition-transform duration-300"
+                                 :class="window.location.pathname === '/home2' ? 'translate-x-6 bg-primary' : 'translate-x-0'">
+                            </div>
+                        </div>
+                        
+                        <!-- Dark Theme Icon -->
+                        <svg class="w-5 h-5 text-white transition-all duration-300 ml-3" 
+                             :class="scrolled ? 'text-dark' : 'text-white'"
+                             fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"/>
+                        </svg>
+                    </label>
+                </div>
+            </div>
+
             <!-- CTA Button -->
             <div class="hidden lg:block">
                 <a href="#booking"
@@ -102,6 +132,34 @@
                     class="mt-4 px-6 py-3 bg-primary text-white text-sm tracking-wider uppercase font-medium hover:bg-secondary transition-all text-center">
                     Book Now
                 </a>
+                
+                <!-- Mobile Theme Toggle -->
+                <div class="mt-6 pt-6 border-t border-gray-200">
+                    <div class="flex items-center justify-between">
+                        <span class="text-sm font-medium text-dark">Theme</span>
+                        <div class="relative">
+                            <label class="flex items-center cursor-pointer group">
+                                <!-- Light Theme Icon -->
+                                <svg class="w-4 h-4 text-dark" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"/>
+                                </svg>
+                                
+                                <!-- Toggle Switch -->
+                                <div class="relative mx-3 w-12 h-7 bg-gray-200 rounded-full transition-colors duration-300"
+                                     onclick="window.location.href = window.location.pathname === '/' ? '/home2' : '/'">
+                                    <div class="absolute top-0.5 left-0.5 w-6 h-6 bg-white rounded-full shadow-sm transform transition-transform duration-300"
+                                         :class="window.location.pathname === '/home2' ? 'translate-x-5 bg-primary' : 'translate-x-0'">
+                                    </div>
+                                </div>
+                                
+                                <!-- Dark Theme Icon -->
+                                <svg class="w-4 h-4 text-dark" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"/>
+                                </svg>
+                            </label>
+                        </div>
+                    </div>
+                </div>
             </nav>
         </div>
     </div>

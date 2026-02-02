@@ -383,6 +383,19 @@
         .fixed.bottom-8.right-8:hover {
             background-color: var(--color-secondary) !important;
         }
+
+        /* Header theme toggle styling for dark theme */
+        header .bg-gray-200 {
+            background-color: #3a403a !important;
+        }
+
+        header .bg-white\/20 {
+            background-color: rgba(243, 245, 243, 0.2) !important;
+        }
+
+        header .toggle-slider {
+            background-color: var(--color-primary) !important;
+        }
     </style>
  
 <script>
