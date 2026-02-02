@@ -199,6 +199,23 @@
             height: 2px;
             background: var(--color-primary);
         }
+
+        /* Mobile layout fixes */
+        @media (max-width: 640px) {
+            .container {
+                padding-left: 1rem !important;
+                padding-right: 1rem !important;
+            }
+            
+            header .container {
+                padding-left: 1rem !important;
+                padding-right: 1rem !important;
+            }
+            
+            .flex {
+                max-width: 100%;
+            }
+        }
     </style>
  
 <script>
