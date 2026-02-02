@@ -15,7 +15,7 @@ use Illuminate\Support\Facades\DB;
 class BookingForm extends Component
 {
     public $currentStep = 1;
-    public $totalSteps = 4;
+    public $totalSteps = 5;
 
     // Step 1: Service Selection
     public $selectedCategory = '';
@@ -236,22 +236,28 @@ class BookingForm extends Component
     private function validateCurrentStep()
     {
         if ($this->currentStep == 1) {
+            // Step 1: Category only
             $this->validate([
                 'selectedCategory' => 'required|exists:categories,id',
-                'selectedListing' => 'required|exists:listings,id',
             ]);
         } elseif ($this->currentStep == 2) {
-            $step2Rules = [
+            // Step 2: Service only
+            $this->validate([
+                'selectedListing' => 'required|exists:listings,id',
+            ]);
+        } elseif ($this->currentStep == 3) {
+            // Step 3: Date & Time
+            $step3Rules = [
                 'selectedDate' => 'required|date|after_or_equal:today',
                 'selectedTime' => 'required',
             ];
             
             // Add bed validation if required
             if (config('booking.requires_bed')) {
-                $step2Rules['selectedBed'] = 'required|exists:beds,id';
+                $step3Rules['selectedBed'] = 'required|exists:beds,id';
             }
             
-            $this->validate($step2Rules);
+            $this->validate($step3Rules);
             
             // Additional validation for date/time availability
             if (!$this->isDateAvailable($this->selectedDate)) {
@@ -265,8 +271,9 @@ class BookingForm extends Component
                     'selectedTime' => 'Selected time slot is no longer available.',
                 ]);
             }
-        } elseif ($this->currentStep == 3) {
-            $step3Rules = [
+        } elseif ($this->currentStep == 4) {
+            // Step 4: Personal Information
+            $step4Rules = [
                 'name' => 'required|string|min:2',
                 'email' => 'required|email',
                 'phone' => 'required|string|min:10',
@@ -274,10 +281,10 @@ class BookingForm extends Component
             
             // Add bed validation if required
             if (config('booking.requires_bed')) {
-                $step3Rules['selectedBed'] = 'required|exists:beds,id';
+                $step4Rules['selectedBed'] = 'required|exists:beds,id';
             }
             
-            $this->validate($step3Rules);
+            $this->validate($step4Rules);
         }
     }
 
@@ -333,7 +340,7 @@ class BookingForm extends Component
             DB::commit();
 
             $this->bookingConfirmed = true;
-            $this->currentStep = 4;
+            $this->currentStep = 5;
 
             // Send confirmation email (optional)
             // Mail::to($this->email)->send(new BookingConfirmation($this->booking));
