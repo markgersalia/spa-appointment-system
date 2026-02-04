@@ -32,12 +32,11 @@ class AdminPanelProvider extends PanelProvider
     {
         return $panel
             ->default()
-            ->id('admin')
+            ->id('admin') 
             ->colors([
-                'primary' => '#7e8f7f',
-                'secondary' => '#7e8f7f',
-                // 'gray' => '#2f3a2f',
+                'primary'=>Color::Green
             ])
+            ->breadCrumbs(false)
             ->discoverResources(in: app_path('Filament/Resources'), for: 'App\Filament\Resources')
             ->discoverPages(in: app_path('Filament/Pages'), for: 'App\Filament\Pages')
             ->discoverClusters(in: app_path('Filament/Clusters'), for: 'App\\Filament\\Clusters')
@@ -46,10 +45,10 @@ class AdminPanelProvider extends PanelProvider
             ])
             // ->discoverWidgets(in: app_path('Filament/Widgets'), for: 'App\Filament\Widgets')
             ->widgets([
-                // AccountWidget::class,
+                AccountWidget::class,
                 // FilamentInfoWidget::class,
-                StatsOverview::class,
                 RevenueWidget::class,
+                StatsOverview::class,
                 CalendarWidget::class,
             ])
             ->middleware([
@@ -58,12 +57,12 @@ class AdminPanelProvider extends PanelProvider
                 StartSession::class,
                 AuthenticateSession::class,
                 ShareErrorsFromSession::class,
-                VerifyCsrfToken::class,
+                VerifyCsrfToken::class, 
                 SubstituteBindings::class,
                 DisableBladeIconComponents::class,
                 DispatchServingFilamentEvent::class,
-            ])
-            // ->viteTheme('resources/css/filament/admin/theme.css')
+            ]) 
+            ->viteTheme('resources/css/filament/admin/theme.css')
             ->plugins([
                 FilamentShieldPlugin::make(), // ✅ register plugin
                 // BriskTheme::make()
@@ -73,22 +72,22 @@ class AdminPanelProvider extends PanelProvider
             ])
             ->sidebarCollapsibleOnDesktop()
             ->subNavigationPosition(SubNavigationPosition::End)
-            ->unsavedChangesAlerts()
-            // ->topbar(false)
+            ->unsavedChangesAlerts()  
             ->brandName(env('APP_NAME'))
             ->profile()
             ->spa()
             ->font('Poppins')
             ->path('admin')
             ->login()
+            ->topbar(false)
             ->authGuard('web')
             // ->topNavigation(true)
-
-            ->darkModeBrandLogo(asset('images/dark-logo.png'))
+            
             ->brandLogo(asset('images/logo.png'))
-            ->brandLogoHeight('40px')
-            ->favicon(asset('images/favicon.ico'))  
+            ->darkModeBrandLogo(asset('images/dark-logo.png'))
+            ->brandLogoHeight('30px')
+            ->favicon(asset('images/logo.jpg'))  
 
-        ;
+            ;
     }
 }

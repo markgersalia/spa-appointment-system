@@ -29,6 +29,7 @@ use Guava\Calendar\ValueObjects\EventClickInfo;
 use Guava\Calendar\ValueObjects\EventDropInfo;
 use Illuminate\Database\Eloquent\Model;
 use Livewire\Form;
+use Filament\Forms\Components\Select;
 
 class CalendarWidget extends FilamentCalendarWidget
 {
@@ -54,7 +55,7 @@ class CalendarWidget extends FilamentCalendarWidget
     //             ) 
     //     ];
     // }  
-    protected CalendarViewType $calendarView = CalendarViewType::DayGridMonth;
+    protected CalendarViewType $calendarView = CalendarViewType::TimeGridWeek;
     protected function getHeader(): ?\Illuminate\Contracts\View\View
     {
         return view('filament.widgets.calendar-legend');
@@ -65,7 +66,7 @@ class CalendarWidget extends FilamentCalendarWidget
     {
         $this->calendarView = CalendarViewType::tryFrom(
             session('calendar_view')
-        ) ?? CalendarViewType::DayGridMonth;
+        ) ?? CalendarViewType::TimeGridWeek;
     }
 
     protected $listeners = ['updateUserOverview' => '$refresh'];
@@ -80,30 +81,43 @@ class CalendarWidget extends FilamentCalendarWidget
         return redirect(request()->header('Referer'));
     }
 
-    public function getHeaderActions(): array
-    {
-        // dd($this->calendarView->value,CalendarViewType::ListDay->value);
-        return [
-            Action::make('month')
-                ->label('Month')
-                ->action(fn() => $this->setView(CalendarViewType::DayGridMonth))
-                ->color(
-                    fn() =>
-                    $this->calendarView->value === CalendarViewType::DayGridMonth->value
-                        ? 'primary'
-                        : 'gray'
-                ),
-            Action::make('day')
-                ->label('Day')
-                ->action(fn() => $this->setView(CalendarViewType::ListDay))
-                ->color(
-                    fn() =>
-                    $this->calendarView->value === CalendarViewType::ListDay->value
-                        ? 'primary'
-                        : 'gray'
-                ),
-        ];
-    }
+   public function getHeaderActions(): array
+{
+    return [
+        Action::make('calendar_view_select')
+            ->label('Calendar View')
+            ->fillForm([
+                'calendar_view' => session('calendar_view'), // Use fillForm instead of default
+            ])
+            ->schema([
+                Select::make('calendar_view')
+                    ->label('View')
+                    ->default(session('calendar_view'))
+                    ->options([
+                        'dayGridMonth' => 'Month Grid',
+                        'listDay' => 'Day List',
+                        'listWeek' => 'Week List',
+                        'listMonth' => 'Month List',
+                        'listYear' => 'Year List',
+                        // 'resourceTimeGridDay' => 'Resource Day Grid',
+                        // 'resourceTimeGridWeek' => 'Resource Week Grid',
+                        // 'resourceTimelineDay' => 'Resource Day Timeline',
+                        // 'resourceTimelineWeek' => 'Resource Week Timeline',
+                        // 'resourceTimelineMonth' => 'Resource Month Timeline',
+                        'timeGridDay' => 'Day Grid',
+                        'timeGridWeek' => 'Week Grid',
+                    ])
+                    ->required()
+                    ->live()
+                    ->afterStateUpdated(fn ($state) => $this->setView(CalendarViewType::tryFrom($state)))
+            ])
+            ->action(function (array $data) {
+                // Action is handled by the live afterStateUpdated
+            })
+            ->modalHeading('Select Calendar View')
+            ->modalSubmitActionLabel('Close'),
+    ];
+}
 
     protected function getCalendarConfig(): array
     {
